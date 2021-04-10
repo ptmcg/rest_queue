@@ -19,6 +19,11 @@ I chose FastAPI as the framework with which to create the REST service, as I wan
 small project with it to learn more about it. The actual implementation was very straightforward,
 once I settled on the API endpoints.
 
+I also extended the original concept, where the server managed just a single queue, to support multiple
+queues, to be a better illustration of REST interactions with a server managing multiple
+resources.
+
+
 ### REST API
 
 | Function | REST method | URL | Return status |
