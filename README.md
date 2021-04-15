@@ -71,8 +71,14 @@ to build, run, stop, start, and delete the `rest_queue` docker image and contain
     # start stopped container
     docker start rest_queue
 
+    # view running containers
+    docker ps
+
     # delete container
     docker rm rest_queue
+
+    # view docker images
+    docker images
 
     # delete image
     docker rmi rest_queue
