@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rest_queue"
+version = "0.1.0"
+description = "A lightweight FastAPI web service that maintains multiple named FIFO queues"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    {name = "REST Queue Team"}
+]
+dependencies = [
+    "uvicorn",
+    "fastapi",
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["rest_queue.src", "client"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "httpx",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
