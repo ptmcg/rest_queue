@@ -137,11 +137,12 @@ async def queue_delete(queue_name: str,
                                     detail=f"No such queue {queue_name!r}")
 
     q = queues[queue_name]
+    remaining_size = len(q)
 
-    if safe_delete and q:
+    if safe_delete and remaining_size > 0:
         raise fastapi.HTTPException(status_code=fastapi.status.HTTP_409_CONFLICT,
                                     detail={"message": f"Queue {queue_name!r} not empty",
-                                            "count": len(q),
+                                            "count": remaining_size,
                                             }
                                     )
 
@@ -150,7 +151,7 @@ async def queue_delete(queue_name: str,
 
     return {
         "message": f"deleted queue {queue_name!r}",
-        "remaining_queue_size": len(q),
+        "remaining_queue_size": remaining_size,
     }
 
 
