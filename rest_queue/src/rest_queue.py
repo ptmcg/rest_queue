@@ -4,11 +4,10 @@
 # A lightweight FastAPI web service that maintains multiple named FIFO queues
 # that can be created, pushed, and popped using REST calls
 #
-# NOTE: this queue does NO persistence, so restarting the server will lose all
-# items that are still in the queue.
+# NOTE: this service does NO persistence, so restarting the server will lose all
+# items that are still in the queues.
 #
 from collections import deque
-from typing import Dict
 
 import fastapi
 
@@ -36,7 +35,7 @@ class Queue:
 
 
 # registry for REST-accessible queues
-queues: Dict[str, Queue] = {}
+queues: dict[str, Queue] = {}
 
 
 app = fastapi.FastAPI()
