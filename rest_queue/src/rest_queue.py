@@ -8,6 +8,7 @@
 # items that are still in the queues.
 #
 from collections import deque
+import functools
 
 import fastapi
 
@@ -17,6 +18,7 @@ class Queue:
     A small container class to wrap a deque with push and pop methods,
     and __iter__ and __len__ dunder methods.
     """
+
     def __init__(self, name):
         self._name = name
         self._contents = deque()
@@ -36,6 +38,24 @@ class Queue:
 
 # registry for REST-accessible queues
 queues: dict[str, Queue] = {}
+
+
+def require_queue_exists(func):
+    """
+    Decorator that checks if a queue exists before executing the decorated function.
+    Raises a 404 HTTP exception if the queue does not exist.
+    """
+
+    @functools.wraps(func)
+    async def wrapper(queue_name: str, *args, **kwargs):
+        if queue_name not in queues:
+            raise fastapi.HTTPException(
+                status_code=fastapi.status.HTTP_404_NOT_FOUND,
+                detail=f"No such queue {queue_name!r}",
+            )
+        return await func(queue_name, *args, **kwargs)
+
+    return wrapper
 
 
 app = fastapi.FastAPI()
@@ -61,8 +81,10 @@ async def queue_new(queue_name: str):
     Raises an exception if the queue already exists.
     """
     if queue_name in queues:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_409_CONFLICT,
-                                    detail=f"Queue {queue_name!r} already exists")
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_409_CONFLICT,
+            detail=f"Queue {queue_name!r} already exists",
+        )
 
     # create new deque and add to registry under the given name
     queues[queue_name] = Queue(queue_name)
@@ -71,14 +93,11 @@ async def queue_new(queue_name: str):
 
 
 @app.post("/queues/{queue_name}/push")
-async def queue_push(queue_name: str, value: str):
+@require_queue_exists
+async def queue_push(queue_name: str, value: str = fastapi.Body(...)):
     """
     Push new value onto queue.
     """
-    if queue_name not in queues:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                    detail=f"No such queue {queue_name!r}")
-
     q = queues[queue_name]
     q.push(value)
 
@@ -89,35 +108,30 @@ async def queue_push(queue_name: str, value: str):
 
 
 @app.post("/queues/{queue_name}/pop")
+@require_queue_exists
 async def queue_pop(queue_name: str):
     """
     Pop oldest value from queue, or None if queue is empty.
     """
-    if queue_name not in queues:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                    detail=f"No such queue {queue_name!r}")
-
     q = queues[queue_name]
     if q:
         value = q.pop()
     else:
         value = None
 
-    return {"message": f"pop from queue {queue_name!r}",
-            "data": value,
-            "remaining_queue_size": len(q),
-            }
+    return {
+        "message": f"pop from queue {queue_name!r}",
+        "data": value,
+        "remaining_queue_size": len(q),
+    }
 
 
 @app.get("/queues/{queue_name}")
+@require_queue_exists
 async def queue_list(queue_name: str):
     """
     List out contents of queue.
     """
-    if queue_name not in queues:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                    detail=f"No such queue {queue_name!r}")
-
     q = queues[queue_name]
 
     return {
@@ -127,24 +141,22 @@ async def queue_list(queue_name: str):
 
 
 @app.delete("/queues/{queue_name}")
-async def queue_delete(queue_name: str,
-                       safe_delete: bool = True):
+@require_queue_exists
+async def queue_delete(queue_name: str, safe_delete: bool = True):
     """
     Delete queue.
     """
-    if queue_name not in queues:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                    detail=f"No such queue {queue_name!r}")
-
     q = queues[queue_name]
     remaining_size = len(q)
 
     if safe_delete and remaining_size > 0:
-        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_409_CONFLICT,
-                                    detail={"message": f"Queue {queue_name!r} not empty",
-                                            "count": remaining_size,
-                                            }
-                                    )
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_409_CONFLICT,
+            detail={
+                "message": f"Queue {queue_name!r} not empty",
+                "count": remaining_size,
+            },
+        )
 
     # remove queue from registry
     del queues[queue_name]
