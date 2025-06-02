@@ -2,3 +2,4 @@ uvicorn
 fastapi
 pytest
 httpx
+pytest-subtests

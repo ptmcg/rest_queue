@@ -16,14 +16,19 @@ def queue():
     return Queue(queue_name)
 
 
-def test_init(queue):
+def test_init(subtests, queue):
     """Test that a Queue is initialized correctly."""
-    assert queue._name == "test_queue"
-    assert isinstance(queue._contents, deque)
-    assert len(queue._contents) == 0
+    with subtests.test(msg='Queue name is set correctly'):
+        assert queue._name == "test_queue"
+
+    with subtests.test(msg='Queue contents is a deque'):
+        assert isinstance(queue._contents, deque)
+
+    with subtests.test(msg='Queue is initially empty'):
+        assert len(queue._contents) == 0
 
 
-def test_iter(queue):
+def test_iter(subtests, queue):
     """Test that __iter__ returns an iterator of the queue contents."""
     # Add some items to the queue
     items = ["item1", "item2", "item3"]
@@ -31,43 +36,53 @@ def test_iter(queue):
         queue.push(item)
 
     # Check that iterating over the queue gives the expected items
-    assert list(queue) == items
+    with subtests.test(msg='Queue iteration returns correct items'):
+        assert list(queue) == items
 
 
-def test_len(queue):
+def test_len(subtests, queue):
     """Test that __len__ returns the correct queue size."""
     # Queue should be empty initially
-    assert len(queue) == 0
+    with subtests.test(msg='Empty queue has length 0'):
+        assert len(queue) == 0
 
     # Add some items and check the length
     queue.push("item1")
-    assert len(queue) == 1
+    with subtests.test(msg='Queue with one item has length 1'):
+        assert len(queue) == 1
 
     queue.push("item2")
-    assert len(queue) == 2
+    with subtests.test(msg='Queue with two items has length 2'):
+        assert len(queue) == 2
 
     # Remove an item and check the length
     queue.pop()
-    assert len(queue) == 1
+    with subtests.test(msg='Queue after popping has correct length'):
+        assert len(queue) == 1
 
 
-def test_push(queue):
+def test_push(subtests, queue):
     """Test that push adds items to the queue correctly."""
     # Queue should be empty initially
-    assert len(queue) == 0
+    with subtests.test(msg='Queue is initially empty'):
+        assert len(queue) == 0
 
     # Push an item and check it was added
     queue.push("item1")
-    assert len(queue) == 1
-    assert list(queue) == ["item1"]
+    with subtests.test(msg='Queue has correct length after first push'):
+        assert len(queue) == 1
+    with subtests.test(msg='Queue has correct contents after first push'):
+        assert list(queue) == ["item1"]
 
     # Push another item and check both items are in the queue
     queue.push("item2")
-    assert len(queue) == 2
-    assert list(queue) == ["item1", "item2"]
+    with subtests.test(msg='Queue has correct length after second push'):
+        assert len(queue) == 2
+    with subtests.test(msg='Queue has correct contents after second push'):
+        assert list(queue) == ["item1", "item2"]
 
 
-def test_pop(queue):
+def test_pop(subtests, queue):
     """Test that pop removes and returns items from the queue in FIFO order."""
     # Add some items to the queue
     items = ["item1", "item2", "item3"]
@@ -75,19 +90,27 @@ def test_pop(queue):
         queue.push(item)
 
     # Pop items and check they come out in the right order
-    assert queue.pop() == "item1"
-    assert queue.pop() == "item2"
-    assert queue.pop() == "item3"
+    with subtests.test(msg='First pop returns first item'):
+        assert queue.pop() == "item1"
+
+    with subtests.test(msg='Second pop returns second item'):
+        assert queue.pop() == "item2"
+
+    with subtests.test(msg='Third pop returns third item'):
+        assert queue.pop() == "item3"
 
     # Queue should be empty now
-    assert len(queue) == 0
+    with subtests.test(msg='Queue is empty after popping all items'):
+        assert len(queue) == 0
 
 
-def test_pop_empty(queue):
+def test_pop_empty(subtests, queue):
     """Test that pop raises an IndexError when the queue is empty."""
     # Queue should be empty initially
-    assert len(queue) == 0
+    with subtests.test(msg='Queue is initially empty'):
+        assert len(queue) == 0
 
     # Popping from an empty queue should raise IndexError
-    with pytest.raises(IndexError):
-        queue.pop()
+    with subtests.test(msg='Popping from empty queue raises IndexError'):
+        with pytest.raises(IndexError):
+            queue.pop()
