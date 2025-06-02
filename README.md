@@ -56,11 +56,11 @@ You can open a browser to `http://localhost:8001/docs#/` to interact with the ne
 #### Docker
 
 The docker directory includes a `Dockerfile` to simplify creating a `rest_queue` running in a 
-Docker container. `cd` to this project's `docker` directory, and run the following commands
+Docker container. `cd` to this project's main directory, and run the following commands
 to build, run, stop, start, and delete the `rest_queue` docker image and container.
 
     # build image
-    docker build -t rest_queue:latest .
+    docker build -f docker/Dockerfile -t rest_queue:latest .
 
     # start container mapping port 18000 to container port 8000
     docker run -d -p 18000:8000 --name rest_queue rest_queue
